@@ -15,8 +15,8 @@ def es_valida(opcion):
     opcion = opcion.split(" ")
     if len(opcion)< 2:
         return False
-   
-    if opcion[0].lower() != "atomico" and opcion[0].lower() != "struct" and opcion[0].lower != "describir":        
+    
+    if opcion[0].lower() != "atomico" and opcion[0].lower() != "struct" and opcion[0].lower() != "describir": 
         return False
     if opcion[0].lower() == "atomico":
         if(len(opcion) > 4):            
@@ -62,8 +62,97 @@ def crear_registro(opcion):
 
         registros[opcion[1]] = nuevos_atomicos
 
+def split_array(arreglo):
+    matriz = []
+    numerito = 0
+    while numerito != len(arreglo):
+        to_append = arreglo[numerito:numerito+4]
+        matriz.append(to_append)
+        numerito = numerito + 4
+    print(matriz)
+
+def crear_espacio_sin_reglas(nombre,resultado = []):
+    array = registros[nombre]
+    array = array[::-1]
+
+    while array:
+        print(array)
+        elemento = array.pop()
+        counter = int(elemento.representacion)
+        nombre = elemento.nombre
+        while counter:
+            resultado.append(nombre)
+            counter -= 1
+    while len(resultado) % 4 != 0:
+        resultado.append(0)
+
+def crear_espacio_con_reglas(array, resultado):
+    
+    array = array[::-1]
+
+    while array:
+        elemento = array.pop()
+        counter = int(elemento.representacion)
+        alineacion = int(elemento.alineacion)
+        nombre = elemento.nombre        
+        if not(resultado):
+            while counter:
+                resultado.append(nombre)
+                counter -= 1
+        else:
+            if len(resultado) % alineacion == 0:
+                while counter:
+                    resultado.append(nombre)
+                    counter -= 1
+            else:
+                while len(resultado) % alineacion != 0 :
+                    resultado.append(0)
+                while counter:
+                    resultado.append(nombre)
+                    counter -= 1
+                
+    while len(resultado) % 4 != 0:
+        resultado.append(0)
+    print(resultado)
+    split_array(resultado)
+    
+
+
+
+   # while array:
+   #     elemento = array.pop()
+   ##     counter = int(elemento.representacion)
+    #    tamano = 0
+        
+    #    nombre = elemento.nombre
+      #  while counter != 0:
+       #     if counter % 4 == 0:
+       #         resultado.append([0,0,0,0])
+       #         for j in range(counter):
+       #             resultado[len(resultado)-1][j] = nombre
+         
+
+
+      #  if i % 4 == 0:
+      #      resultado.append([0,0,0,0])
+      #      for j in range(3):
+      #      resultado[len(resultado)-1][j] = nombre
+    
+    
+
+    
+    
+    
+
+
+
+
 def describir(nombre):
-    jk
+   
+    if nombre[1] in registros.keys():
+       # crear_espacio_sin_reglas(nombre[1], [])
+        crear_espacio_con_reglas(registros[nombre[1]], [])
+
 
 
 def main():
@@ -72,6 +161,7 @@ def main():
     while True:
         print("Introduzca ATOMICO <nombre> <representacion> <alineacion> para crear un nuevo tipo atomico")
         print("Introduzca STRUCT <nombre> [<tipo>] para crear un nuevo struct")
+        print("Introduzca DESCRIBIR <nombre> para describir un registro ya existente")
         opcion = input()
         if(es_valida(opcion)):
             opcion = opcion.split(" ")
@@ -82,6 +172,9 @@ def main():
             elif(opcion[0].lower() == "struct"):
                 crear_registro(opcion)
                 print_structs()
+            elif(opcion[0].lower() == "describir"):
+                describir(opcion)
+              
             elif(opcion[0].lower() == "salir"):
                 break
         else:
