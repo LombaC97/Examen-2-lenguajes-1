@@ -117,7 +117,7 @@ def crear_espacio_con_reglas(array, resultado):
         resultado.append(0)
     print(resultado)
     split_array(resultado)
-    
+    return resultado
 
 
 
@@ -195,13 +195,10 @@ def backtracking(nombre):
         print(list(permutations(arreglo)))
         
         for lista in list(permutations(arreglo)):            
-            for elem in lista:
-                y = []
-                x = []
+            
                 
-                webito = multiples_opciones(elem, x, lista, y,0)
-                if webito not in resultado2:
-                    resultado2.append(webito)
+            webito = crear_espacio_con_reglas(list(lista), [])
+            resultado2.append(webito)
     print("resultadito: ",resultado2)
 
     
