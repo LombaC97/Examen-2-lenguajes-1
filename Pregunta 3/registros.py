@@ -1,3 +1,5 @@
+import copy
+from itertools import permutations
 class Atomico:
     def __init__(self,nombre, representacion, alineacion):
         self.nombre = nombre
@@ -60,7 +62,7 @@ def crear_registro(opcion):
         for elem in opcion[2:]:
             nuevos_atomicos.append(atomicos[elem])
 
-        registros[opcion[1]] = nuevos_atomicos
+        registros[opcion[1]] = copy.deepcopy(nuevos_atomicos)
 
 def split_array(arreglo):
     matriz = []
@@ -137,21 +139,80 @@ def crear_espacio_con_reglas(array, resultado):
       #      resultado.append([0,0,0,0])
       #      for j in range(3):
       #      resultado[len(resultado)-1][j] = nombre
-    
-    
+
+def verificar_nombres(elem, array):
+    for elemento in array:
+        if elem.nombre == elemento.nombre:
+            return True
+    return False
+
+
+
+def multiples_opciones(elemento, resultado, arreglo, ya_evaluados, recursion_level):
+       
+        counter = int(elemento.representacion)
+        alineacion = int(elemento.alineacion)
+        nombre = elemento.nombre        
+        if not(resultado):
+            while counter:
+                resultado.append(nombre)
+                counter -= 1
+        else:
+            if len(resultado) % alineacion == 0:
+                print(elemento)
+                while counter:
+                    resultado.append(nombre)
+                    counter -= 1
+            else:
+                print("extendiendo con 0s", elemento)
+                while len(resultado) % alineacion != 0 :
+                    resultado.append(0)
+                while counter:
+                    
+                    resultado.append(nombre)
+                    counter -= 1
+                    
+        ya_evaluados.append(elemento)
+        
+        for elem in arreglo:           
+            if not(verificar_nombres(elem, ya_evaluados)):                
+                print("holi soy un elem", elem,"mi padre es:", elemento, "recursion level:", recursion_level)
+                multiples_opciones(elem, resultado, arreglo, ya_evaluados, recursion_level+1)
+        print(resultado)
+        return resultado
+                
+                
+   # while len(resultado) % 4 != 0:
+   #     resultado.append(0)
+   # print(resultado)
+   # split_array(resultado)
+
+def backtracking(nombre):
+    resultado2 = []
+    if nombre[1] in registros.keys():
+        arreglo = copy.deepcopy(registros[nombre[1]])
+        print("holis",arreglo)
+        print(list(permutations(arreglo)))
+        
+        for lista in list(permutations(arreglo)):            
+            for elem in lista:
+                y = []
+                x = []
+                
+                webito = multiples_opciones(elem, x, lista, y,0)
+                if webito not in resultado2:
+                    resultado2.append(webito)
+    print("resultadito: ",resultado2)
 
     
     
     
-
-
-
-
 def describir(nombre):
    
     if nombre[1] in registros.keys():
        # crear_espacio_sin_reglas(nombre[1], [])
         crear_espacio_con_reglas(registros[nombre[1]], [])
+        backtracking(nombre)
 
 
 
