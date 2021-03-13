@@ -1,5 +1,5 @@
 import copy
-from itertools import permutations
+from itertools import permutations, takewhile
 class Atomico:
     def __init__(self,nombre, representacion, alineacion):
         self.nombre = nombre
@@ -9,6 +9,15 @@ class Atomico:
     def __str__(self):
         return "Tipo: {}, Rep: {}, Ali: {}".format(self.nombre,self.representacion, self.alineacion)
 
+class Structs:
+    def __init__(self, nombre, elementos,representacion= None, alineacion = None, elementos_optimo = None, saltos = None):
+        self.nombre = nombre
+        self.elementos = elementos
+        self.representacion = representacion
+        self.alineacion = alineacion
+        self.saltos = dict()
+        self.elementos_optimo = elementos_optimo
+        
 atomicos = dict()
 registros = dict()
 
@@ -54,15 +63,18 @@ def crear_atomico(opcion):
 def crear_registro(opcion):
     if(not(ya_existente(opcion))): 
         for elem in opcion[2:]: 
-            if elem not in atomicos.keys():
+            if elem not in atomicos.keys() and elem not in registros.keys():
                 print("Ha introducido un tipo no existente")
                 return
-        nuevos_atomicos = []
+        nuevos_elementos = []
 
         for elem in opcion[2:]:
-            nuevos_atomicos.append(atomicos[elem])
-
-        registros[opcion[1]] = copy.deepcopy(nuevos_atomicos)
+            try:
+                nuevos_elementos.append(atomicos[elem])
+            except:
+                nuevos_elementos.append(registros[elem])
+        nuevo_registro = Structs(opcion[1], nuevos_elementos)
+        registros[opcion[1]] = nuevo_registro
 
 def split_array(arreglo):
     matriz = []
@@ -73,50 +85,64 @@ def split_array(arreglo):
         numerito = numerito + 4
     print(matriz)
 
-def crear_espacio_sin_reglas(nombre,resultado = []):
-    array = registros[nombre]
+def calcular_tamano_y_perdida(array):
+    return len(array), array.count(0)
+
+
+def crear_espacio_sin_reglas(array,resultado ):
+    
     array = array[::-1]
 
     while array:
-        print(array)
+      
         elemento = array.pop()
         counter = int(elemento.representacion)
         nombre = elemento.nombre
         while counter:
             resultado.append(nombre)
             counter -= 1
-    while len(resultado) % 4 != 0:
-        resultado.append(0)
+    return resultado
+  #  while len(resultado) % 4 != 0:
+  #      resultado.append(0)
 
 def crear_espacio_con_reglas(array, resultado):
     
     array = array[::-1]
-
+    
     while array:
         elemento = array.pop()
         counter = int(elemento.representacion)
         alineacion = int(elemento.alineacion)
-        nombre = elemento.nombre        
-        if not(resultado):
-            while counter:
-                resultado.append(nombre)
-                counter -= 1
-        else:
-            if len(resultado) % alineacion == 0:
+        nombre = elemento.nombre 
+             
+       # if not(resultado):
+       #     while counter:
+       #         resultado.append(nombre)
+       #         counter -= 1
+       # else:
+        if len(resultado) % alineacion == 0:
+            if nombre in atomicos.keys():
                 while counter:
                     resultado.append(nombre)
                     counter -= 1
             else:
-                while len(resultado) % alineacion != 0 :
-                    resultado.append(0)
+                resultado.append(elemento.elementos_optimo)
+        else:
+            while len(resultado) % alineacion != 0 :
+                resultado.append(0)
+            if nombre in atomicos.keys():
                 while counter:
                     resultado.append(nombre)
                     counter -= 1
+            else:
+                resultado.append(elemento.elementos_optimo)
+        
+        
                 
-    while len(resultado) % 4 != 0:
-        resultado.append(0)
-    print(resultado)
-    split_array(resultado)
+   # while len(resultado) % 4 != 0:
+   #     resultado.append(0)
+   # print(resultado)
+   # split_array(resultado)
     return resultado
 
 
@@ -145,41 +171,44 @@ def verificar_nombres(elem, array):
         if elem.nombre == elemento.nombre:
             return True
     return False
-
-
-
-def multiples_opciones(elemento, resultado, arreglo, ya_evaluados, recursion_level):
+def verificar_hay_struct(array):
+    resultado = []
+    for elem in array:
+        if elem.nombre in registros.keys():
+            resultado.append(elem)
+    return resultado
+#def multiples_opciones(elemento, resultado, arreglo, ya_evaluados, recursion_level):
        
-        counter = int(elemento.representacion)
-        alineacion = int(elemento.alineacion)
-        nombre = elemento.nombre        
-        if not(resultado):
-            while counter:
-                resultado.append(nombre)
-                counter -= 1
-        else:
-            if len(resultado) % alineacion == 0:
-                print(elemento)
-                while counter:
-                    resultado.append(nombre)
-                    counter -= 1
-            else:
-                print("extendiendo con 0s", elemento)
-                while len(resultado) % alineacion != 0 :
-                    resultado.append(0)
-                while counter:
+#        counter = int(elemento.representacion)
+#        alineacion = int(elemento.alineacion)
+#        nombre = elemento.nombre        
+#        if not(resultado):
+#            while counter:
+#                resultado.append(nombre)
+#                counter -= 1
+#        else:
+#            if len(resultado) % alineacion == 0:
+#                print(elemento)
+#                while counter:
+#                    resultado.append(nombre)
+#                    counter -= 1
+#            else:
+#                print("extendiendo con 0s", elemento)
+#                while len(resultado) % alineacion != 0 :
+#                    resultado.append(0)
+#                while counter:
                     
-                    resultado.append(nombre)
-                    counter -= 1
+ #                   resultado.append(nombre)
+ #                   counter -= 1
                     
-        ya_evaluados.append(elemento)
+#        ya_evaluados.append(elemento)
         
-        for elem in arreglo:           
-            if not(verificar_nombres(elem, ya_evaluados)):                
-                print("holi soy un elem", elem,"mi padre es:", elemento, "recursion level:", recursion_level)
-                multiples_opciones(elem, resultado, arreglo, ya_evaluados, recursion_level+1)
-        print(resultado)
-        return resultado
+#        for elem in arreglo:           
+#            if not(verificar_nombres(elem, ya_evaluados)):                
+#                print("holi soy un elem", elem,"mi padre es:", elemento, "recursion level:", recursion_level)
+#                multiples_opciones(elem, resultado, arreglo, ya_evaluados, recursion_level+1)
+#        print(resultado)
+#        return resultado
                 
                 
    # while len(resultado) % 4 != 0:
@@ -190,26 +219,65 @@ def multiples_opciones(elemento, resultado, arreglo, ya_evaluados, recursion_lev
 def backtracking(nombre):
     resultado2 = []
     if nombre[1] in registros.keys():
-        arreglo = copy.deepcopy(registros[nombre[1]])
-        print("holis",arreglo)
-        print(list(permutations(arreglo)))
-        
-        for lista in list(permutations(arreglo)):            
-            
-                
+        arreglo = copy.deepcopy(registros[nombre[1]].elementos)
+        for lista in list(permutations(arreglo)):               
             webito = crear_espacio_con_reglas(list(lista), [])
             resultado2.append(webito)
-    print("resultadito: ",resultado2)
+def equals_cero(x):
+    return x == 0
+
+def revisar_ceros(array, elem):
+   # array = array[::-1]
+    resultado = dict()
+    i = 0
+    while i< len(array):
+        x = array[i-1]
+        if(array[i] == 0):
+            contador = 0
+            while array[i] == 0:
+                contador += 1
+                i += 1
+            resultado[x] = contador
+        else:
+            i += 1
+    return resultado
+    
+  #  i = 0
+  #  while i < len(array):
+  #      if array[i] != 0:
+  #          i = i+1
+  #          continue
+  #      nuevo_array = list(takewhile(equals_cero, array[i:]))
+        
+  #      i = len(nuevo_array) + i
+
+  #      resultado[array[len(nuevo_array)-i-1]] = len(nuevo_array)
+  #  print(resultado)
+
+        
+        
 
     
-    
-    
 def describir(nombre):
-   
+    
     if nombre[1] in registros.keys():
-       # crear_espacio_sin_reglas(nombre[1], [])
-        crear_espacio_con_reglas(registros[nombre[1]], [])
-        backtracking(nombre)
+        a_evaluar = registros[nombre[1]].elementos
+        #Espacio sin reglas:
+        structs = verificar_hay_struct(a_evaluar)
+        if(structs):
+            for elem in structs:
+                elem.representacion = len(crear_espacio_sin_reglas(elem.elementos, []))
+                elem.elementos_optimo = crear_espacio_con_reglas(elem.elementos,[])
+                elem.representacion = len(elem.elementos_optimo)
+                elem.alineacion = elem.elementos[0].alineacion
+                
+                elem.saltos = revisar_ceros(elem.elementos_optimo, elem)
+
+        print(crear_espacio_con_reglas(a_evaluar, []))
+        
+        
+        #crear_espacio_con_reglas(registros[nombre[1]], [])
+       # backtracking(nombre)
 
 
 
@@ -229,7 +297,7 @@ def main():
                 print_atomicos()
             elif(opcion[0].lower() == "struct"):
                 crear_registro(opcion)
-                print_structs()
+               # print_structs()
             elif(opcion[0].lower() == "describir"):
                 describir(opcion)
               
