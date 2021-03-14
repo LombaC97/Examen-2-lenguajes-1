@@ -157,7 +157,7 @@ def crear_espacio_con_reglas(array, resultado):
     #    resultado.append(0)
    # print(resultado)
    # split_array(resultado)
-    return len(resultado), resultado
+    return resultado
 
 
 
@@ -183,13 +183,22 @@ def verificar_hay_union(array):
 
 
 def determina_optimo(array):
-    
     resultado = array[0]
+    if(type(resultado) is tuple):
+        resultado = resultado[1]
+    
     for elem in array:
-        numero = elem.count(0)
+        try:
+            numero = elem.count(0)
+        except:
+            numero = elem[1].count(0)
         if(numero < resultado.count(0)):
-            resultado = elem      
-    return resultado, len(resultado), resultado.count(0), resultado[0].alineacion
+            if(type(elem) is tuple):
+                resultado = elem[1]
+            else:
+                resultado = elem 
+        
+    return resultado, len(resultado)
 
 
 def backtracking(nombre):
@@ -199,7 +208,9 @@ def backtracking(nombre):
         for lista in list(permutations(arreglo)):               
             webito = crear_espacio_con_reglas(list(lista), [])
             resultado.append(webito)
-    return determina_optimo(resultado)
+    
+        return determina_optimo(resultado)
+    
 def gcd(a,b):
     while b:
         a,b = b, a%b
@@ -218,7 +229,7 @@ def tamano_union(array):
 def alineacion_union(array):
     resultado = []
     for elem in array:
-        resultado.append(elem.representacion)
+        resultado.append(int(elem.representacion))
     return functools.reduce(lambda x, y: lcm(x, y), resultado)
 
 def imprimir_array_como_matriz(array):
@@ -233,8 +244,6 @@ def imprimir_array_como_matriz(array):
             except:
                 print(str(array[i]) + " |", end =" ")
         
-
-
 
 def print_sin_reglas(array, imprimir, interno, acumulado):
     indice = 0
@@ -255,7 +264,8 @@ def print_sin_reglas(array, imprimir, interno, acumulado):
             indice += int(array[indice].representacion)
     if imprimir:
         imprimir_array_como_matriz(array)
-def struct_interno(array, indice_inicial):
+
+def struct_interno(array, struct, indice_inicial):
     indice = 0
     print("Soy un struct interno, empiezo en la posicion {}".format(indice_inicial))
     while indice < len(array):
@@ -265,9 +275,12 @@ def struct_interno(array, indice_inicial):
         print("\t", end="")
         print("Me encuentro en la posicion {} del struct interno, {}".format(indice, array[indice]))
         indice += int(array[indice].representacion)
+    print("Representacion del interno struct interno: ")
+    imprimir_array_como_matriz(struct.elementos_optimo)
+    print("\n---------------------------------------------------------")
 
 
-def print_con_reglas(array, imprimir, interno, acumulado):
+def print_con_reglas(array, acumulado):
     indice = 0
     while indice < len(array):
         if (array[indice] == 0):
@@ -275,7 +288,7 @@ def print_con_reglas(array, imprimir, interno, acumulado):
             continue
 
         if(type(array[indice]) is tuple):
-            struct_interno(array[indice][1], indice)
+            struct_interno(array[indice][1], array[indice][0] ,indice)
             indice += 1
         
         elif array[indice].nombre in atomicos.keys():
@@ -291,8 +304,8 @@ def print_con_reglas(array, imprimir, interno, acumulado):
         elif array[indice].nombre in variantes.keys():
             print("Soy un union, empiezo en la posicion {}, ocupo {} bytes".format(indice+acumulado, array[indice].representacion))
             indice += int(array[indice].representacion)
-    if imprimir:
-        imprimir_array_como_matriz(array)
+    
+    imprimir_array_como_matriz(array)
 def contar_perdida(array):
     resultado = array.count(0)
     cantidad = 0
@@ -330,7 +343,8 @@ def describir(nombre):
         #Caso Struct con reglas
         if(structs):
             for elem in structs:
-                elem.representacion, elem.elementos_optimo  = crear_espacio_con_reglas(elem.elementos, [])               
+                elem.elementos_optimo  = crear_espacio_con_reglas(elem.elementos, [])   
+                elem.representacion = len(elem.elementos_optimo)        
                 elem.alineacion = elem.elementos[0].alineacion
 
         if(unions):
@@ -338,11 +352,24 @@ def describir(nombre):
                 elem.representacion = tamano_union(elem.elementos)
                 elem.alineacion = alineacion_union(elem.elementos)
 
-        registros[nombre].representacion, registros[nombre].elementos_optimo = crear_espacio_con_reglas(a_evaluar, [])
-        print_con_reglas(registros[nombre].elementos_optimo, True, False, 0)
+        registros[nombre].elementos_optimo = crear_espacio_con_reglas(a_evaluar, [])
+        registros[nombre].representacion = len(registros[nombre].elementos_optimo)
+        print_con_reglas(registros[nombre].elementos_optimo,  0)
         registros[nombre].representacion, registros[nombre].desperdicio = contar_perdida(registros[nombre].elementos_optimo)
         print("\nPara el caso no empaquetado hubo un total de {} bytes ocupados, y una perdida total de {} bytes".format(registros[nombre].representacion,registros[nombre].desperdicio))
-
+        #Caso Optimizacion
+        if(structs):
+            for elem in structs:
+                elem.elementos_optimo,elem.representacion  = backtracking(elem.nombre)              
+                elem.alineacion = elem.elementos_optimo[0].alineacion
+        if(unions):
+            for elem in unions:
+                elem.representacion = tamano_union(elem.elementos)
+                elem.alineacion = alineacion_union(elem.elementos)
+        registros[nombre].elementos_optimo, registros[nombre].representacion = backtracking(nombre)
+        print_con_reglas(registros[nombre].elementos_optimo,  0)
+        registros[nombre].representacion, registros[nombre].desperdicio = contar_perdida(registros[nombre].elementos_optimo)
+        print("\nPara el caso optimizado hubo un total de {} bytes ocupados, y una perdida total de {} bytes".format(registros[nombre].representacion,registros[nombre].desperdicio))
         
       #  if(structs):
       #      for elem in structs:
