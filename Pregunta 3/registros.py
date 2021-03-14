@@ -1,4 +1,5 @@
 import copy
+import functools
 from itertools import permutations, takewhile, chain
 class Atomico:
     def __init__(self,nombre, representacion, alineacion):
@@ -124,45 +125,39 @@ def crear_espacio_con_reglas(array, resultado):
         alineacion = int(elemento.alineacion)
         nombre = elemento.nombre 
              
-       # if not(resultado):
-       #     while counter:
-       #         resultado.append(nombre)
-       #         counter -= 1
-       # else:
         if len(resultado) % alineacion == 0:
-            if nombre in atomicos.keys():
+            if nombre in atomicos.keys() or nombre in variantes.keys():
                 while counter:
                     resultado.append(elemento)
                     counter -= 1
             else:
-                for elem in elemento.elementos_optimo:
-                    if elem != 0:
-                        resultado.append(elemento)
-                    else:
-                        resultado.append(elem)
-                
+               # for elem in elemento.elementos_optimo:
+               #     if elem != 0:
+               #         resultado.append(elemento)
+               #     else:
+               #         resultado.append(elem)
+                resultado.append((elemento,elemento.elementos_optimo))
         else:
             while len(resultado) % alineacion != 0 :
                 resultado.append(0)
-            if nombre in atomicos.keys():
+            if nombre in atomicos.keys() or nombre in variantes.keys():
                 while counter:
                     resultado.append(elemento)
                     counter -= 1
             else:
-                for elem in elemento.elementos_optimo:
-                    if elem != 0:
-                        resultado.append(elemento)
-                    else:
-                        resultado.append(elem)
-             
-                   
-          
+                #for elem in elemento.elementos_optimo:
+                #    if elem != 0:
+                #        resultado.append(elemento)
+                #    else:
+                #        resultado.append(elem)
+                resultado.append((elemento,elemento.elementos_optimo))
+                      
                 
     #while len(resultado) % 4 != 0:
     #    resultado.append(0)
    # print(resultado)
    # split_array(resultado)
-    return resultado
+    return len(resultado), resultado
 
 
 
@@ -205,20 +200,40 @@ def backtracking(nombre):
             webito = crear_espacio_con_reglas(list(lista), [])
             resultado.append(webito)
     return determina_optimo(resultado)
+def gcd(a,b):
+    while b:
+        a,b = b, a%b
+    return a
+
+def lcm(a,b):
+    return a*b // gcd(a,b)
+
 
 def tamano_union(array):
     resultado = []
     for elem in array:
         resultado.append(elem.representacion)
     return max(resultado)
+
+def alineacion_union(array):
+    resultado = []
+    for elem in array:
+        resultado.append(elem.representacion)
+    return functools.reduce(lambda x, y: lcm(x, y), resultado)
+
 def imprimir_array_como_matriz(array):
+    
     for i in range(len(array)):
         if i % 4 == 0 : print()
         try:
             print(array[i].nombre + " |", end=" ")
         except:
-            print(array[i])
+            try:
+                print(str(array[i][0].nombre) + " |", end =" ")
+            except:
+                print(str(array[i]) + " |", end =" ")
         
+
 
 
 def print_sin_reglas(array, imprimir, interno, acumulado):
@@ -240,6 +255,55 @@ def print_sin_reglas(array, imprimir, interno, acumulado):
             indice += int(array[indice].representacion)
     if imprimir:
         imprimir_array_como_matriz(array)
+def struct_interno(array, indice_inicial):
+    indice = 0
+    print("Soy un struct interno, empiezo en la posicion {}".format(indice_inicial))
+    while indice < len(array):
+        if(array[indice] == 0):
+            indice += 1
+            continue
+        print("\t", end="")
+        print("Me encuentro en la posicion {} del struct interno, {}".format(indice, array[indice]))
+        indice += int(array[indice].representacion)
+
+
+def print_con_reglas(array, imprimir, interno, acumulado):
+    indice = 0
+    while indice < len(array):
+        if (array[indice] == 0):
+            indice +=1
+            continue
+
+        if(type(array[indice]) is tuple):
+            struct_interno(array[indice][1], indice)
+            indice += 1
+        
+        elif array[indice].nombre in atomicos.keys():
+            print("Me encuentro en la posicion {}, {}".format(indice, array[indice]))
+            indice += int(array[indice].representacion)
+    
+
+        #elif array[indice].nombre in registros.keys():
+        #    print("Soy un struct, empiezo en la posicion {}, ocupo {} bytes".format(indice+acumulado, array[indice].representacion ))
+            
+        #    print_con_reglas(array[indice].elementos_optimo, False, True, indice)
+        #    indice += int(array[indice].representacion)
+        elif array[indice].nombre in variantes.keys():
+            print("Soy un union, empiezo en la posicion {}, ocupo {} bytes".format(indice+acumulado, array[indice].representacion))
+            indice += int(array[indice].representacion)
+    if imprimir:
+        imprimir_array_como_matriz(array)
+def contar_perdida(array):
+    resultado = array.count(0)
+    cantidad = 0
+    largo = len(array)
+    listas = [x for x in array if type(x) is tuple]
+    for lista in listas:
+        cantidad += 1
+        largo += len(lista[1])
+        resultado += lista[1].count(0)
+
+    return  largo-cantidad,resultado
 
 def describir(nombre):
     
@@ -247,8 +311,8 @@ def describir(nombre):
         print(atomicos[nombre])
 
     elif nombre in registros.keys():
-        a_evaluar = registros[nombre].elementos
-        #Espacio sin reglas:
+        #Tomamos todos los elementos
+        a_evaluar = registros[nombre].elementos       
         structs = verificar_hay_struct(a_evaluar)
         unions = verificar_hay_union(a_evaluar)
         #Caso Struct sin reglas
@@ -261,6 +325,25 @@ def describir(nombre):
         
         registros[nombre].representacion, registros[nombre].elementos_optimo = crear_espacio_sin_reglas(a_evaluar, [])
         print_sin_reglas(registros[nombre].elementos_optimo, True, False, 0)
+        print("\nPara el caso empaquetado hubo un total de {} bytes ocupados, y una perdida de 0 bytes".format(registros[nombre].representacion))
+        print()
+        #Caso Struct con reglas
+        if(structs):
+            for elem in structs:
+                elem.representacion, elem.elementos_optimo  = crear_espacio_con_reglas(elem.elementos, [])               
+                elem.alineacion = elem.elementos[0].alineacion
+
+        if(unions):
+            for elem in unions:
+                elem.representacion = tamano_union(elem.elementos)
+                elem.alineacion = alineacion_union(elem.elementos)
+
+        registros[nombre].representacion, registros[nombre].elementos_optimo = crear_espacio_con_reglas(a_evaluar, [])
+        print_con_reglas(registros[nombre].elementos_optimo, True, False, 0)
+        registros[nombre].representacion, registros[nombre].desperdicio = contar_perdida(registros[nombre].elementos_optimo)
+        print("\nPara el caso no empaquetado hubo un total de {} bytes ocupados, y una perdida total de {} bytes".format(registros[nombre].representacion,registros[nombre].desperdicio))
+
+        
       #  if(structs):
       #      for elem in structs:
                 #elem.representacion = len(crear_espacio_sin_reglas(elem.elementos, []))
