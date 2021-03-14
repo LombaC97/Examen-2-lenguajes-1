@@ -1,5 +1,5 @@
 import copy
-from itertools import permutations, takewhile
+from itertools import permutations, takewhile, chain
 class Atomico:
     def __init__(self,nombre, representacion, alineacion):
         self.nombre = nombre
@@ -10,23 +10,25 @@ class Atomico:
         return "Tipo: {}, Rep: {}, Ali: {}".format(self.nombre,self.representacion, self.alineacion)
 
 class Structs:
-    def __init__(self, nombre, elementos,representacion= None, alineacion = None, elementos_optimo = None, saltos = None):
+    def __init__(self, nombre, elementos, representacion= None, alineacion = None, elementos_optimo = None, desperdicio = None):
         self.nombre = nombre
         self.elementos = elementos
         self.representacion = representacion
         self.alineacion = alineacion
-        self.saltos = dict()
+        self.desperdicio = desperdicio
         self.elementos_optimo = elementos_optimo
-        
+
+
 atomicos = dict()
 registros = dict()
 
 
+
+
 def es_valida(opcion):
     opcion = opcion.split(" ")
-    if len(opcion)< 2:
-        return False
-    
+    if len(opcion) < 2:
+        return False    
     if opcion[0].lower() != "atomico" and opcion[0].lower() != "struct" and opcion[0].lower() != "describir": 
         return False
     if opcion[0].lower() == "atomico":
@@ -72,7 +74,7 @@ def crear_registro(opcion):
             try:
                 nuevos_elementos.append(atomicos[elem])
             except:
-                nuevos_elementos.append(registros[elem])
+                nuevos_elementos.append(registros[elem])       
         nuevo_registro = Structs(opcion[1], nuevos_elementos)
         registros[opcion[1]] = nuevo_registro
 
@@ -90,11 +92,9 @@ def calcular_tamano_y_perdida(array):
 
 
 def crear_espacio_sin_reglas(array,resultado ):
-    
     array = array[::-1]
 
     while array:
-      
         elemento = array.pop()
         counter = int(elemento.representacion)
         nombre = elemento.nombre
@@ -123,24 +123,34 @@ def crear_espacio_con_reglas(array, resultado):
         if len(resultado) % alineacion == 0:
             if nombre in atomicos.keys():
                 while counter:
-                    resultado.append(nombre)
+                    resultado.append(elemento)
                     counter -= 1
             else:
-                resultado.append(elemento.elementos_optimo)
+                for elem in elemento.elementos_optimo:
+                    if elem != 0:
+                        resultado.append(elemento)
+                    else:
+                        resultado.append(elem)
+                
         else:
             while len(resultado) % alineacion != 0 :
                 resultado.append(0)
             if nombre in atomicos.keys():
                 while counter:
-                    resultado.append(nombre)
+                    resultado.append(elemento)
                     counter -= 1
             else:
-                resultado.append(elemento.elementos_optimo)
-        
-        
+                for elem in elemento.elementos_optimo:
+                    if elem != 0:
+                        resultado.append(elemento)
+                    else:
+                        resultado.append(elem)
+             
+                   
+          
                 
-   # while len(resultado) % 4 != 0:
-   #     resultado.append(0)
+    #while len(resultado) % 4 != 0:
+    #    resultado.append(0)
    # print(resultado)
    # split_array(resultado)
     return resultado
@@ -216,13 +226,25 @@ def verificar_hay_struct(array):
    # print(resultado)
    # split_array(resultado)
 
+def determina_optimo(array):
+    
+    resultado = array[0]
+    for elem in array:
+        numero = elem.count(0)
+        if(numero < resultado.count(0)):
+            resultado = elem      
+    return resultado, len(resultado), resultado.count(0), resultado[0].alineacion
+
+
 def backtracking(nombre):
-    resultado2 = []
-    if nombre[1] in registros.keys():
-        arreglo = copy.deepcopy(registros[nombre[1]].elementos)
+    resultado = []
+    if nombre in registros.keys():
+        arreglo = copy.deepcopy(registros[nombre].elementos)
         for lista in list(permutations(arreglo)):               
             webito = crear_espacio_con_reglas(list(lista), [])
-            resultado2.append(webito)
+            resultado.append(webito)
+    return determina_optimo(resultado)
+
 def equals_cero(x):
     return x == 0
 
@@ -253,27 +275,50 @@ def revisar_ceros(array, elem):
 
   #      resultado[array[len(nuevo_array)-i-1]] = len(nuevo_array)
   #  print(resultado)
-
-        
-        
-
-    
+   
 def describir(nombre):
     
-    if nombre[1] in registros.keys():
-        a_evaluar = registros[nombre[1]].elementos
+    if nombre in registros.keys():
+        a_evaluar = registros[nombre].elementos
         #Espacio sin reglas:
         structs = verificar_hay_struct(a_evaluar)
+
+
+      #  if(structs):
+      #      for elem in structs:
+                #elem.representacion = len(crear_espacio_sin_reglas(elem.elementos, []))
+      #          elem.elementos_optimo = crear_espacio_con_reglas(elem.elementos,[])
+      #          elem.representacion = len(elem.elementos_optimo)
+      #          elem.alineacion = elem.elementos[0].alineacion
+            
+      #  print(crear_espacio_con_reglas(a_evaluar, []))
         if(structs):
             for elem in structs:
-                elem.representacion = len(crear_espacio_sin_reglas(elem.elementos, []))
-                elem.elementos_optimo = crear_espacio_con_reglas(elem.elementos,[])
-                elem.representacion = len(elem.elementos_optimo)
-                elem.alineacion = elem.elementos[0].alineacion
-                
-                elem.saltos = revisar_ceros(elem.elementos_optimo, elem)
+                elem.elementos_optimo, elem.representacion, elem.desperdicio, elem.alineacion = backtracking(elem.nombre)
 
-        print(crear_espacio_con_reglas(a_evaluar, []))
+                for webo in elem.elementos_optimo:
+                    try:
+                        print(webo.nombre)
+                    except:
+                        print(webo)
+
+
+            registros[nombre].elementos_optimo,registros[nombre].representacion,registros[nombre].desperdicio,registros[nombre].alineacion = backtracking(nombre)
+            print(registros[nombre].elementos_optimo)
+            for elem in registros[nombre].elementos_optimo:                
+                try:
+                    print(elem.nombre)
+                except:
+                    print(elem)
+                #
+                #
+                
+                #elem.saltos = revisar_ceros(elem.elementos_optimo, elem)
+      #  else:
+      #      print(crear_espacio_sin_reglas(a_evaluar, []))
+
+      #      print(crear_espacio_con_reglas(a_evaluar, []))
+      #      backtracking(nombre)
         
         
         #crear_espacio_con_reglas(registros[nombre[1]], [])
@@ -299,7 +344,7 @@ def main():
                 crear_registro(opcion)
                # print_structs()
             elif(opcion[0].lower() == "describir"):
-                describir(opcion)
+                describir(opcion[1])
               
             elif(opcion[0].lower() == "salir"):
                 break
