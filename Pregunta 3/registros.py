@@ -64,8 +64,25 @@ def crear_atomico(opcion):
     if(not(ya_existente(opcion))):          
         atomicos[opcion[1]] = Atomico(opcion[1],opcion[2], opcion[3])
     
+def nivel_anidamiento(opcion):
+    
+    for elem in opcion[2:]:
+        try:
+                analizar = atomicos[elem]
+        except:
+                try:
+                    analizar = registros[elem]  
+                except:
+                    analizar = variantes[elem] 
+        if type(analizar) is Struct or type(analizar) is Union:
+            if(verificar_hay_struct(analizar.elementos) or verificar_hay_union(analizar.elementos)):
+                return True
+    return False
+
 def crear_registro(opcion, tipo):
-    if(not(ya_existente(opcion))): 
+    if (nivel_anidamiento(opcion)):
+        return print("Excedido el maximo nivel de anidamiento permitido")
+    if not(ya_existente(opcion)): 
         for elem in opcion[2:]: 
             if elem not in atomicos.keys() and elem not in registros.keys() and elem not in variantes.keys():
                 print("Ha introducido un tipo no existente")
@@ -86,20 +103,6 @@ def crear_registro(opcion, tipo):
         else:
             nuevo_registro = Union(opcion[1], nuevos_elementos)
             variantes[opcion[1]] = nuevo_registro
-
-
-
-def split_array(arreglo):
-    matriz = []
-    numerito = 0
-    while numerito != len(arreglo):
-        to_append = arreglo[numerito:numerito+4]
-        matriz.append(to_append)
-        numerito = numerito + 4
-    print(matriz)
-
-def calcular_tamano_y_perdida(array):
-    return len(array), array.count(0)
 
 
 def crear_espacio_sin_reglas(array, resultado):
@@ -168,14 +171,6 @@ def crear_espacio_con_reglas(array, resultado):
    # split_array(resultado)
     return resultado
 
-
-
-
-def verificar_nombres(elem, array):
-    for elemento in array:
-        if elem.nombre == elemento.nombre:
-            return True
-    return False
 def verificar_hay_struct(array):
     resultado = []
     for elem in array:
