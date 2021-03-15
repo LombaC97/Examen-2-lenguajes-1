@@ -35,6 +35,7 @@ variantes = dict()
 
 
 def es_valida(opcion):
+    opcion = opcion.strip()
     opcion = opcion.split(" ")
     if opcion[0].lower() == "salir":
         return True
@@ -226,7 +227,6 @@ def gcd(a,b):
 
 def lcm(a,b):
     return a*b // gcd(a,b)
-
 
 def tamano_union(array):
     resultado = []
