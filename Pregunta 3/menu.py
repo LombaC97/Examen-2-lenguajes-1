@@ -1,4 +1,5 @@
 from registros import *
+
 def es_valida(opcion):
     opcion = opcion.strip()
     opcion = opcion.split(" ")
