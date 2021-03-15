@@ -32,29 +32,6 @@ registros = dict()
 variantes = dict()
 
 
-
-
-def es_valida(opcion):
-    opcion = opcion.strip()
-    opcion = opcion.split(" ")
-    if opcion[0].lower() == "salir":
-        return True
-    if len(opcion) < 2:
-        return False    
-    if opcion[0].lower() != "atomico" and opcion[0].lower() != "struct" and opcion[0].lower() != "describir" and opcion[0].lower() != "union": 
-        return False
-    if opcion[0].lower() == "atomico":
-        if(len(opcion) > 4):            
-            return False
-        if opcion[2].isdigit() and opcion[3].isdigit():
-            return True
-    if opcion[0].lower() == "struct" or opcion[0].lower() == "union":
-        if len(opcion) < 3:
-            return False
-        return True
-    if opcion[0].lower() == "describir":
-        return True
-
 def ya_existente(opcion):
     if ( opcion[1] in atomicos.keys() or opcion[1] in registros.keys() or opcion[1] in variantes.keys() ):
         print("Nombre ya existente") 
@@ -205,14 +182,13 @@ def determina_optimo(array):
     return resultado, len(resultado)
 
 
-def backtracking(nombre):
+def optimizacion(nombre):
     resultado = []
     if nombre in registros.keys():
         arreglo = copy.deepcopy(registros[nombre].elementos)
         for lista in list(permutations(arreglo)):               
-            webito = crear_espacio_con_reglas(list(lista), [])
-            resultado.append(webito)
-    
+            resultado.append(crear_espacio_con_reglas(list(lista), []))
+                
         return determina_optimo(resultado)
     
 def gcd(a,b):
@@ -247,26 +223,6 @@ def imprimir_array_como_matriz(array):
             except:
                 print(str(array[i]) + " |", end =" ")
         
-
-def print_sin_reglas(array, imprimir, interno, acumulado):
-    indice = 0
-    while indice < len(array):
-        if(interno):
-                print("\t", end="")
-        if array[indice].nombre in atomicos.keys():
-            print("Me encuentro en la posicion {}, {}".format(indice+acumulado, array[indice]))
-            indice += int(array[indice].representacion)
-
-        elif array[indice].nombre in registros.keys():
-            print("Soy un struct, empiezo en la posicion {}, ocupo {} bytes".format(indice+acumulado, array[indice].representacion ))
-            
-            print_sin_reglas(array[indice].elementos_optimo, False, True, indice)
-            indice += int(array[indice].representacion)
-        elif array[indice].nombre in variantes.keys():
-            print("Soy un union, empiezo en la posicion {}, ocupo {} bytes".format(indice+acumulado, array[indice].representacion))
-            indice += int(array[indice].representacion)
-    if imprimir:
-        imprimir_array_como_matriz(array)
 
 def struct_interno(array, struct, indice_inicial):
     indice = 0
@@ -331,12 +287,13 @@ def contar_perdida(array):
     return  largo-cantidad,resultado
 
 def describir(nombre):
-    
+   
     if nombre in atomicos.keys():
         print(atomicos[nombre])
+        return str(atomicos[nombre])
 
     elif nombre in registros.keys():
-        
+       
         #Tomamos todos los elementos
         a_evaluar = registros[nombre].elementos       
         structs = verificar_hay_struct(a_evaluar)
@@ -379,13 +336,13 @@ def describir(nombre):
         #Caso Optimizacion
         if(structs):
             for elem in structs:
-                elem.elementos_optimo,elem.representacion  = backtracking(elem.nombre)              
+                elem.elementos_optimo,elem.representacion  = optimizacion(elem.nombre)              
                 elem.alineacion = elem.elementos_optimo[0].alineacion
         if(unions):
             for elem in unions:
                 elem.representacion = tamano_union(elem.elementos)
                 elem.alineacion = alineacion_union(elem.elementos)
-        registros[nombre].elementos_optimo, registros[nombre].representacion = backtracking(nombre)
+        registros[nombre].elementos_optimo, registros[nombre].representacion = optimizacion(nombre)
         print_con_reglas(registros[nombre].elementos_optimo,  0)
         registros[nombre].representacion, registros[nombre].desperdicio = contar_perdida(registros[nombre].elementos_optimo)
         print("\nPara el caso optimizado hubo un total de {} bytes ocupados, y una perdida total de {} bytes".format(registros[nombre].representacion,registros[nombre].desperdicio))
@@ -427,44 +384,10 @@ def describir(nombre):
             print("-------------------------------------------CASO UNION OPTIMIZACION--------------------------------------")
             print("\n")
             for elem in structs:
-                elem.elementos_optimo,elem.representacion  = backtracking(elem.nombre)              
+                elem.elementos_optimo,elem.representacion  = optimizacion(elem.nombre)              
                 elem.alineacion = elem.elementos_optimo[0].alineacion
             
             variantes[nombre].representacion = tamano_union(variantes[nombre].elementos)
             variantes[nombre].alineacion = alineacion_union(variantes[nombre].elementos)
             imprimir_variantes(variantes[nombre])
             
-      
-
-def main():
-    print("Bienvenido, por favor introduzca una de las opciones")
-    opcion = ""
-    while True:
-        print("Introduzca ATOMICO <nombre> <representacion> <alineacion> para crear un nuevo tipo atomico")
-        print("Introduzca STRUCT <nombre> [<tipo>] para crear un nuevo struct")
-        print("Introduzca UNION <nombre> [<tipo>] para crear un nuevo struct")
-        print("Introduzca DESCRIBIR <nombre> para describir un registro ya existente")
-        print()
-        opcion = input()
-        if(es_valida(opcion)):
-            opcion = opcion.split(" ")
-
-            if(opcion[0].lower() == "atomico"):                
-                crear_atomico(opcion)
-                
-            elif(opcion[0].lower() == "struct"):
-                crear_registro(opcion, "struct")
-               # print_structs()
-            elif(opcion[0].lower() == "union"):
-                crear_registro(opcion, "union")
-            elif(opcion[0].lower() == "describir"):
-                describir(opcion[1])
-              
-            elif(opcion[0].lower() == "salir"):
-                break
-        else:
-            print("Por favor introduzca una opcion valida")
-        print()
-
-if __name__ == '__main__':
-    main()
