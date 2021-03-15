@@ -66,8 +66,8 @@ def crear_registro(opcion, tipo):
             if elem not in atomicos.keys() and elem not in registros.keys() and elem not in variantes.keys():
                 print("Ha introducido un tipo no existente")
                 return
-            if (nivel_anidamiento(opcion)):
-                return print("Excedido el maximo nivel de anidamiento permitido")
+        if (nivel_anidamiento(opcion)):
+            return print("Excedido el maximo nivel de anidamiento permitido")
         nuevos_elementos = []
 
         for elem in opcion[2:]:
@@ -258,7 +258,7 @@ def print_struct(array, acumulado):
             indice += int(array[indice].representacion)
   
         elif array[indice].nombre in variantes.keys():
-            print("Soy un union, empiezo en la posicion {}, ocupo {} bytes".format(indice+acumulado, array[indice].representacion))
+            print("Soy un union, empiezo en la posicion {}, ocupo {} bytes, mi alineacion es {}".format(indice+acumulado, array[indice].representacion, array[indice].alineacion))
             indice += int(array[indice].representacion)
     
     imprimir_array_como_matriz(array)
@@ -276,7 +276,7 @@ def imprimir_variantes(variante):
             print("\tSoy un registro variante interno, mi tamano es de: {} bytes, y mi alineacion en caso de estar en un struct seria {}".format(elem.representacion, elem.alineacion), end="")
         elif type(elem) is Struct:
             print("\tSoy un registro interno, mi tamano es de: {} bytes, y mi alineacion en caso de estar en un struct seria {}. Bytes desperdiciados en mi: {}".format(elem.representacion, elem.alineacion, elem.elementos_optimo.count(0)), end="")
-            print("\tMi representacion seria la siguiente:")
+            print("\t Mi representacion (struct interno) seria la siguiente:")
             imprimir_array_como_matriz(elem.elementos_optimo)
 
 #Funcion para contar todas las posibles perdidas de un struct dentro de otro, basicamente
