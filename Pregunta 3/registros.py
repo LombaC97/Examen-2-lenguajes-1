@@ -68,7 +68,7 @@ def crear_registro(opcion, tipo):
                 return
         if (nivel_anidamiento(opcion)):
             return print("Excedido el maximo nivel de anidamiento permitido")
-        nuevos_elementos = []
+        nuevos_elementos = [] 
 
         for elem in opcion[2:]:
             try:
@@ -158,22 +158,16 @@ def verificar_hay_union(array):
 #Funcion que, determina dentro de un array, cuantos 0's hay (o sea, espacios vacios)
 #Y busca aquella que tenga la menor cantidad de 0's posibles y la retorna
 def determina_optimo(array):
+    nousar, minimo = contar_perdida(array[0])
     resultado = array[0]
-    if(type(resultado) is tuple):
-        resultado = resultado[1]
-    
-    for elem in array:
-        try:
-            numero = elem.count(0)
-        except:
-            numero = elem[1].count(0)
-        if(numero < resultado.count(0)):
-            if(type(elem) is tuple):
-                resultado = elem[1]
-            else:
-                resultado = elem 
-        
+
+    for lista in array:        
+        largo, perdida = contar_perdida(lista)
+        if(perdida < minimo):
+            minimo = perdida
+            resultado = lista
     return resultado, len(resultado)
+
 
 #Funcion utilizada para buscar el mejor caso que respete la alineacion y pierda la menor cantidad de 
 #bytes posible
@@ -292,7 +286,7 @@ def contar_perdida(array):
         largo += len(lista[1])
         resultado += lista[1].count(0)
 
-    return  largo-cantidad,resultado
+    return  largo-cantidad, resultado
 
 #Funcion utilizada para describir un elemento
 #Notese que elementos_optimo es un atributo que contiene su representacion dependiendo de cada caso,
@@ -363,7 +357,7 @@ def describir(nombre):
         print_struct(registros[nombre].elementos_optimo,  0)
         #Y ahora determinamos cual fue su tamano total (incluyendo el tamano de los structs internos) y el desperdicio total
         registros[nombre].representacion, registros[nombre].desperdicio = contar_perdida(registros[nombre].elementos_optimo)
-        print("\nPara el caso no empaquetado hubo un total de {} bytes ocupados, y una perdida total de {} bytes".format(registros[nombre].representacion,registros[nombre].desperdicio))
+        print("\nPara el caso no empaquetado hubo un total de {} bytes ocupados, y una perdida total de {} bytes".format(registros[nombre].representacion, registros[nombre].desperdicio))
         print()
         print("-------------------------------------------CASO STRUCT OPTIMIZACION--------------------------------------")
         #Caso Optimizacion

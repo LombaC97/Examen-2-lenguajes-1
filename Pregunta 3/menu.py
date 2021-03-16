@@ -40,7 +40,7 @@ def main():
                 
             elif(opcion[0].lower() == "struct"):
                 crear_registro(opcion, "struct")
-               # print_structs()
+           
             elif(opcion[0].lower() == "union"):
                 crear_registro(opcion, "union")
             elif(opcion[0].lower() == "describir"):
