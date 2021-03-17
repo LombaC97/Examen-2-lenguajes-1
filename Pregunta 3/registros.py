@@ -328,7 +328,7 @@ def describir(nombre):
         print_struct(registros[nombre].elementos_optimo, 0)
         #Calculamos la representacion y desperdicio
         registros[nombre].representacion, registros[nombre].desperdicio = contar_perdida(registros[nombre].elementos_optimo)
-        print("\nPara el caso empaquetado hubo un total de {} bytes ocupados, y una perdida de {} bytes".format(registros[nombre].representacion, registros[nombre].desperdicio))
+        print("\nPara el caso empaquetado hubo un total de {} bytes ocupados, y una perdida de 0 bytes".format(registros[nombre].representacion))
         print()
         print("-------------------------------------------CASO STRUCT NO EMPAQUETADO--------------------------------------")
         #Caso Struct con reglas
