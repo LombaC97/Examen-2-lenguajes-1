@@ -10,7 +10,7 @@ def es_valida(opcion):
     if opcion[0].lower() != "atomico" and opcion[0].lower() != "struct" and opcion[0].lower() != "describir" and opcion[0].lower() != "union": 
         return False
     if opcion[0].lower() == "atomico":
-        if(len(opcion) > 4):            
+        if len(opcion) != 4:            
             return False
         if opcion[2].isdigit() and opcion[3].isdigit():
             return True
