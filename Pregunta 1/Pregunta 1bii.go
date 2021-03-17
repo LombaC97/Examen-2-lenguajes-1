@@ -13,7 +13,7 @@ type Church func(function) function
 //El cero es basicamente retornar una funcion que retorna
 // una interfaz vacia y una function(definida mas arriba)
 // Dicha function lo que hace es retornar x que es la function vacia
-func zero(fun function) function {
+func cero(fun function) function {
 	return func(x interface{}) interface{} {
 		return x
 	}
@@ -56,10 +56,10 @@ func incr(i interface{}) interface{} {
 }
 
 func main() {
-	z := Church(zero)
+	c := Church(cero)
 	//Para crear los numeros simplemente aplicamos sucesor a z tantas veces como querramos para obtenerlo
-	cuatro := z.sucesor().sucesor().sucesor().sucesor()
-	nueve := z.sucesor().sucesor().sucesor().sucesor().sucesor().sucesor().sucesor().sucesor().sucesor()
+	cuatro := c.sucesor().sucesor().sucesor().sucesor()
+	nueve := c.sucesor().sucesor().sucesor().sucesor().sucesor().sucesor().sucesor().sucesor().sucesor()
 
 	fmt.Println("nueve + cuatro =", nueve.sumar(cuatro).toInt())
 	fmt.Println("nueve * cuatro =", nueve.multiplicar(cuatro).toInt())
